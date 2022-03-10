@@ -2,6 +2,19 @@ import os
 import requests
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+from pprint import pprint
+
+
+def get_vk_groups():
+    url = 'https://api.vk.com/method/groups.get'
+    params = {
+        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'extended': 1,
+        'v': os.getenv('VK_API_VER'),
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    return response.json()
 
 
 def get_comix():
@@ -21,4 +34,5 @@ def download_comix_img(img_url):
 
 
 if __name__ == '__main__':
-    get_comix()
+    load_dotenv()
+    pprint(get_vk_groups(), sort_dicts=False)
