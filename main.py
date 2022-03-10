@@ -1,6 +1,7 @@
 import os
 import requests
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 
 
 def get_comix():
