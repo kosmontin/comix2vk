@@ -5,12 +5,24 @@ from dotenv import load_dotenv
 from pprint import pprint
 
 
+def get_uploadserver_info():
+    url = 'https://api.vk.com/method/photos.getWallUploadServer'
+    params = {
+        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'group_id': os.getenv('VK_GROUP_ID'),
+        'v': os.getenv('VK_API_VER')
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    return response.json()
+
+
 def get_vk_groups():
     url = 'https://api.vk.com/method/groups.get'
     params = {
         'access_token': os.getenv('VK_ACCESS_TOKEN'),
         'extended': 1,
-        'v': os.getenv('VK_API_VER'),
+        'v': os.getenv('VK_API_VER')
     }
     response = requests.get(url, params=params)
     response.raise_for_status()
@@ -35,4 +47,4 @@ def download_comix_img(img_url):
 
 if __name__ == '__main__':
     load_dotenv()
-    pprint(get_vk_groups(), sort_dicts=False)
+    pprint(get_uploadserver_info(), sort_dicts=False)
