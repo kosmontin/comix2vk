@@ -5,6 +5,15 @@ from dotenv import load_dotenv
 from pprint import pprint
 
 
+def upload_file_to_server(pathfile, upload_url):
+    url = upload_url
+    with open(pathfile, 'rb') as file:
+        files = {'photo': file}
+        response = requests.post(url, files=files)
+        response.raise_for_status()
+    return response.json()
+
+
 def get_uploadserver_info():
     url = 'https://api.vk.com/method/photos.getWallUploadServer'
     params = {
@@ -14,7 +23,7 @@ def get_uploadserver_info():
     }
     response = requests.get(url, params=params)
     response.raise_for_status()
-    return response.json()
+    return response.json()['response']['upload_url']
 
 
 def get_vk_groups():
@@ -47,4 +56,4 @@ def download_comix_img(img_url):
 
 if __name__ == '__main__':
     load_dotenv()
-    pprint(get_uploadserver_info(), sort_dicts=False)
+    pprint(upload_file_to_server('./supported_features.png', get_uploadserver_info()), sort_dicts=False)
