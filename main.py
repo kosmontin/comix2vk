@@ -59,18 +59,6 @@ def get_uploadserver_url():
     return response.json()['response']['upload_url']
 
 
-def get_vk_groups():
-    url = 'https://api.vk.com/method/groups.get'
-    params = {
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
-        'extended': 1,
-        'v': os.getenv('VK_API_VER')
-    }
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    return response.json()
-
-
 def comic_is_posted(comic_num):
     url = f'https://xkcd.com/{comic_num}/info.0.json'
     response = requests.get(url)
