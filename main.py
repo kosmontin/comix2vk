@@ -1,9 +1,13 @@
 import os
+import random
 import requests
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 VK_METHODS_URL = 'https://api.vk.com/method/'
+COMIX_DIR = 'images'
+COMIX_FROM = 1
+COMIX_TO = 2600
 
 
 def upload_file_to_server(upload_url, pathfile, comment=None):
@@ -61,8 +65,20 @@ def get_vk_groups():
     return response.json()
 
 
+def comix_is_exist(comix_num):
+    url = f'https://xkcd.com/{comix_num}/info.0.json'
+    response = requests.get(url)
+    response.raise_for_status()
+    filename = os.path.basename(urlparse(response.json()['img']).path)
+    filepath = os.path.join(COMIX_DIR, filename)
+    return True if os.path.exists(filepath) else False
+
+
 def get_comix():
-    url = 'https://xkcd.com/630/info.0.json'
+    comix_num = 1
+    while comix_is_exist(comix_num):
+        comix_num = random.randint(COMIX_FROM, COMIX_TO)
+    url = f'https://xkcd.com/{comix_num}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     comix_content = response.json()
@@ -73,12 +89,13 @@ def get_comix():
 
 
 def download_comix_img(img_url):
-    path = 'images/' + os.path.basename(urlparse(img_url).path)
+    os.makedirs(COMIX_DIR, exist_ok=True)
+    img_path = os.path.join(COMIX_DIR, os.path.basename(urlparse(img_url).path))
     response = requests.get(img_url)
     response.raise_for_status()
-    with open(path, 'wb') as file:
+    with open(img_path, 'wb') as file:
         file.write(response.content)
-    return path
+    return img_path
 
 
 if __name__ == '__main__':
