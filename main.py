@@ -6,8 +6,6 @@ import requests
 from dotenv import load_dotenv
 
 VK_METHODS_URL = 'https://api.vk.com/method/'
-COMICS_FROM = 1
-COMICS_TO = 2600
 
 
 def upload_file_to_server(upload_url, filename, comment=None):
@@ -73,9 +71,9 @@ def comic_is_posted(comic_num):
         return False
 
 
-def get_comic():
+def get_comic(comics_count):
     while True:
-        comic_num = random.randint(COMICS_FROM, COMICS_TO)
+        comic_num = random.randint(1, comics_count)
         if not comic_is_posted(comic_num):
             break
     url = f'https://xkcd.com/{comic_num}/info.0.json'
@@ -97,9 +95,16 @@ def download_comix_img(img_url):
     return filename
 
 
+def get_comics_count():
+    url = 'https://xkcd.com/info.0.json'
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json()['num']
+
+
 def post_comic():
     load_dotenv()
-    comic = get_comic()
+    comic = get_comic(get_comics_count())
     post_result = upload_file_to_server(get_uploadserver_url(), comic['filename'], comic['comment'])
     if 'response' in post_result.keys():
         print('Комикс опубликован')
