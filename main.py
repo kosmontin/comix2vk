@@ -57,7 +57,7 @@ def get_uploadserver_url():
     return response.json()['response']['upload_url']
 
 
-def comic_is_posted(filename):
+def is_posted_comic(filename):
     if os.path.exists('posted_comics.txt'):
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
