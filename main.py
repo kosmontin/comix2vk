@@ -8,11 +8,14 @@ from dotenv import load_dotenv
 VK_METHODS_URL = 'https://api.vk.com/method/'
 
 
-def upload_file_to_server(upload_url, filename, comment=None):
+def upload_file_to_server(upload_url, filename):
     with open(filename, 'rb') as file:
         response = requests.post(upload_url, files={'photo': file})
         response.raise_for_status()
-        server_answer = response.json()
+    return response.json()
+
+
+def save_file_to_server(server_answer):
     params = {
         'access_token': os.getenv('VK_ACCESS_TOKEN'),
         'group_id': os.getenv('VK_GROUP_ID'),
@@ -24,9 +27,10 @@ def upload_file_to_server(upload_url, filename, comment=None):
     url = VK_METHODS_URL + 'photos.saveWallPhoto'
     response = requests.get(url, params=params)
     response.raise_for_status()
-    server_answer = response.json()
-    if 'error' in server_answer.keys():
-        return server_answer
+    return response.json()
+
+
+def post_to_wall(server_answer, comment=None):
     params = {
         'access_token': os.getenv('VK_ACCESS_TOKEN'),
         'attachments': f'photo{server_answer["response"][0]["owner_id"]}_{server_answer["response"][0]["id"]}',
@@ -38,11 +42,7 @@ def upload_file_to_server(upload_url, filename, comment=None):
     url = VK_METHODS_URL + 'wall.post'
     response = requests.get(url, params=params)
     response.raise_for_status()
-    server_answer = response.json()
-    if 'response' in server_answer.keys():
-        with open('posted_comics.txt', 'a') as posted_file:
-            posted_file.write(f'{filename}\n')
-    return server_answer
+    return response.json()
 
 
 def get_uploadserver_url():
@@ -57,31 +57,24 @@ def get_uploadserver_url():
     return response.json()['response']['upload_url']
 
 
-def comic_is_posted(comic_num):
-    url = f'https://xkcd.com/{comic_num}/info.0.json'
-    response = requests.get(url)
-    response.raise_for_status()
-    filename = os.path.basename(urlparse(response.json()['img']).path)
+def comic_is_posted(filename):
     if os.path.exists('posted_comics.txt'):
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
         if filename in posted_comics:
             return True
-    else:
-        return False
+    return False
 
 
 def get_comic(comics_count):
-    while True:
-        comic_num = random.randint(1, comics_count)
-        if not comic_is_posted(comic_num):
-            break
+    comic_num = random.randint(1, comics_count)
     url = f'https://xkcd.com/{comic_num}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     comic_content = response.json()
+    filename = os.path.basename(urlparse(comic_content['img']).path)
     return {
-        'filename': download_comix_img(comic_content['img']),
+        'img_url': download_comix_img(comic_content['img']),
         'comment': comic_content['alt']
     }
 
@@ -105,12 +98,15 @@ def get_comics_count():
 def post_comic():
     load_dotenv()
     comic = get_comic(get_comics_count())
-    post_result = upload_file_to_server(get_uploadserver_url(), comic['filename'], comic['comment'])
-    if 'response' in post_result.keys():
+    upload_url = get_uploadserver_url()
+    answer = upload_file_to_server(upload_url, comic['img_url'])
+    answer = save_file_to_server(answer)
+    answer = post_to_wall(answer, comic['comment'])
+    if 'response' in answer.keys():
         print('Комикс опубликован')
-        os.remove(comic['filename'])
-    elif 'error' in post_result.keys():
-        print('Ошибка публикации:\n', post_result['error']['error_msg'])
+        os.remove(comic['img_url'])
+    elif 'error' in answer.keys():
+        print('Ошибка публикации:\n', answer['error']['error_msg'])
 
 
 if __name__ == '__main__':
