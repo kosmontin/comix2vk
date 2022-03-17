@@ -24,7 +24,7 @@ def save_file_to_server(server_answer):
         'hash': server_answer['hash'],
         'v': os.getenv('VK_API_VER')
     }
-    url = VK_METHODS_URL + 'photos.saveWallPhoto'
+    url = f'{VK_METHODS_URL}photos.saveWallPhoto'
     response = requests.get(url, params=params)
     response.raise_for_status()
     return response.json()
@@ -39,14 +39,14 @@ def post_to_wall(server_answer, comment=None):
         'message': comment,
         'v': os.getenv('VK_API_VER')
     }
-    url = VK_METHODS_URL + 'wall.post'
+    url = f'{VK_METHODS_URL}wall.post'
     response = requests.get(url, params=params)
     response.raise_for_status()
     return response.json()
 
 
 def get_uploadserver_url():
-    url = VK_METHODS_URL + 'photos.getWallUploadServer'
+    url = f'{VK_METHODS_URL}photos.getWallUploadServer'
     params = {
         'access_token': os.getenv('VK_ACCESS_TOKEN'),
         'group_id': os.getenv('VK_GROUP_ID'),
