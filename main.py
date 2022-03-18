@@ -57,25 +57,30 @@ def get_uploadserver_url():
     return response.json()['response']['upload_url']
 
 
-def is_posted_comic(filename):
+def get_posted_comics():
     if os.path.exists('posted_comics.txt'):
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
-        if filename in posted_comics:
-            return True
-    return False
+        return posted_comics
+    return None
 
 
 def get_comic(comics_count):
-    comic_num = random.randint(1, comics_count)
+    posted_comics = get_posted_comics()
+    for _ in range(1, comics_count+1):
+        comic_num = random.randint(1, comics_count)
+        if comic_num not in posted_comics:
+            break
+    else:
+        raise ValueError('All comics was posted. Please, delete "posted_comics.txt" file')
     url = f'https://xkcd.com/{comic_num}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     comic_content = response.json()
-    filename = os.path.basename(urlparse(comic_content['img']).path)
     return {
         'img_url': download_comix_img(comic_content['img']),
-        'comment': comic_content['alt']
+        'comment': comic_content['alt'],
+        'comic_num': comic_num
     }
 
 
