@@ -119,7 +119,7 @@ def check_response(response):
             f'Произошла ошибка.\n'
             f'Код ошибки: {response["error"]["error_code"]}\n'
             f'Сообщение: {response["error"]["error_msg"]}\n'
-            f'Подробности по адресу: https://vk.com/dev/errors'
+            f'Более подробно по адресу: https://vk.com/dev/errors'
         )
 
 
@@ -131,9 +131,11 @@ def post_comic(api_key, group_id, api_ver):
         answer = save_file_to_server(api_key, group_id, api_ver, answer)
         post_to_wall(api_key, group_id, api_ver, answer, comic['comment'])
         write_posted_comic(comic['comic_num'])
+        print('Комикс опубликован')
+    except SystemError as err:
+        print(err)
     finally:
         os.remove(comic['filename'])
-    print('Комикс опубликован')
 
 
 if __name__ == '__main__':

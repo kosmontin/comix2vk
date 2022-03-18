@@ -44,6 +44,8 @@ python main.py
 ```
 ### В случае ошибки:
 ```shell
-Ошибка публикации:
- User authorization failed: no access_token passed.
+Произошла ошибка.
+Код ошибки: 5
+Сообщение: User authorization failed: no access_token passed.
+Более подробно по адресу: https://vk.com/dev/errors
 ```
