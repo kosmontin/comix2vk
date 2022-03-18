@@ -15,14 +15,14 @@ def upload_file_to_server(upload_url, filename):
     return response.json()
 
 
-def save_file_to_server(server_answer):
+def save_file_to_server(api_key, group_id, api_ver, server_answer):
     params = {
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
-        'group_id': os.getenv('VK_GROUP_ID'),
+        'access_token': api_key,
+        'group_id': group_id,
         'server': server_answer['server'],
         'photo': server_answer['photo'],
         'hash': server_answer['hash'],
-        'v': os.getenv('VK_API_VER')
+        'v': api_ver
     }
     url = f'{VK_METHODS_URL}photos.saveWallPhoto'
     response = requests.get(url, params=params)
@@ -30,14 +30,14 @@ def save_file_to_server(server_answer):
     return response.json()
 
 
-def post_to_wall(server_answer, comment=None):
+def post_to_wall(api_key, group_id, api_ver, server_answer, comment=None):
     params = {
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'access_token': api_key,
         'attachments': f'photo{server_answer["response"][0]["owner_id"]}_{server_answer["response"][0]["id"]}',
-        'owner_id': -int(os.getenv('VK_GROUP_ID')),
+        'owner_id': -int(group_id),
         'from_group': 1,
         'message': comment,
-        'v': os.getenv('VK_API_VER')
+        'v': api_ver
     }
     url = f'{VK_METHODS_URL}wall.post'
     response = requests.get(url, params=params)
@@ -45,12 +45,12 @@ def post_to_wall(server_answer, comment=None):
     return response.json()
 
 
-def get_uploadserver_url():
+def get_uploadserver_url(api_key, group_id, api_ver):
     url = f'{VK_METHODS_URL}photos.getWallUploadServer'
     params = {
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
-        'group_id': os.getenv('VK_GROUP_ID'),
-        'v': os.getenv('VK_API_VER')
+        'access_token': api_key,
+        'group_id': group_id,
+        'v': api_ver
     }
     response = requests.get(url, params=params)
     response.raise_for_status()
@@ -100,13 +100,12 @@ def get_comics_count():
     return response.json()['num']
 
 
-def post_comic():
-    load_dotenv()
+def post_comic(api_key, group_id, api_ver):
     comic = get_comic(get_comics_count())
-    upload_url = get_uploadserver_url()
+    upload_url = get_uploadserver_url(api_key, group_id, api_ver)
     answer = upload_file_to_server(upload_url, comic['img_url'])
-    answer = save_file_to_server(answer)
-    answer = post_to_wall(answer, comic['comment'])
+    answer = save_file_to_server(api_key, group_id, api_ver, answer)
+    answer = post_to_wall(api_key, group_id, api_ver, answer, comic['comment'])
     if 'response' in answer.keys():
         print('Комикс опубликован')
         os.remove(comic['img_url'])
@@ -115,4 +114,8 @@ def post_comic():
 
 
 if __name__ == '__main__':
-    post_comic()
+    load_dotenv()
+    api_key, group_id, api_ver = os.getenv('VK_ACCESS_TOKEN'), \
+                                 os.getenv('VK_GROUP_ID'), \
+                                 os.getenv('VK_API_VER')
+    post_comic(api_key, group_id, api_ver)
