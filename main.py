@@ -72,12 +72,12 @@ def get_comic(comic_num):
     response.raise_for_status()
     comic_content = response.json()
     return {
-        'filename': download_comix_img(comic_content['img']),
+        'filename': download_comic_img(comic_content['img']),
         'comment': comic_content['alt']
     }
 
 
-def download_comix_img(img_url):
+def download_comic_img(img_url):
     filename = os.path.basename(urlparse(img_url).path)
     response = requests.get(img_url)
     response.raise_for_status()
