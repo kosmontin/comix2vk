@@ -70,7 +70,6 @@ def get_posted_comics_nums():
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
         return posted_comics
-    return None
 
 
 def get_random_comic(comics_count):
