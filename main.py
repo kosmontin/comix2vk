@@ -37,7 +37,8 @@ def save_file_to_server(api_key, group_id, api_ver, server_answer):
 def post_to_wall(api_key, group_id, api_ver, server_answer, comment=None):
     params = {
         'access_token': api_key,
-        'attachments': f'photo{server_answer["response"][0]["owner_id"]}_{server_answer["response"][0]["id"]}',
+        'attachments': (f'photo{server_answer["response"][0]["owner_id"]}_'
+                        f'{server_answer["response"][0]["id"]}'),
         'owner_id': -int(group_id),
         'from_group': 1,
         'message': comment,
@@ -97,12 +98,13 @@ def get_unique_comics_num(comics_count):
     if os.path.exists('posted_comics.txt'):
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
-    for _ in range(1, comics_count+1):
+    for _ in range(1, comics_count + 1):
         comic_num = random.randint(1, comics_count)
         if not posted_comics or comic_num not in posted_comics:
             return comic_num
     else:
-        raise ValueError('Все комиксы опубликованы. Пожалуйста, удалите файл "posted_comics.txt"')
+        raise ValueError('Все комиксы опубликованы. '
+                         'Пожалуйста, удалите файл "posted_comics.txt"')
 
 
 def write_posted_comic_num(comic_num):
@@ -133,17 +135,19 @@ def post_random_comic(api_key, group_id, api_ver, post_only_unique):
         answer = save_file_to_server(api_key, group_id, api_ver, answer)
         post_to_wall(api_key, group_id, api_ver, answer, comic['comment'])
         write_posted_comic_num(comic_num)
-        print('Комикс опубликован')
-    except (SystemError, ValueError) as err:
-        print(err)
     finally:
         os.remove(comic['filename'])
 
 
 if __name__ == '__main__':
     load_dotenv()
-    api_key, group_id, api_ver, only_unique = os.getenv('VK_ACCESS_TOKEN'), \
-                                              os.getenv('VK_GROUP_ID'), \
-                                              os.getenv('VK_API_VER'), \
-                                              os.getenv('POST_UNIQUE_COMIC', False).lower() in ('true', 'yes', '1')
-    post_random_comic(api_key, group_id, api_ver, only_unique)
+    api_key = os.getenv('VK_ACCESS_TOKEN')
+    group_id = os.getenv('VK_GROUP_ID')
+    api_ver = os.getenv('VK_API_VER')
+    only_unique = os.getenv(
+        'POST_UNIQUE_COMIC', False
+    ).lower() in ('true', 'yes', '1')
+    try:
+        post_random_comic(api_key, group_id, api_ver, only_unique)
+    except (SystemError, ValueError) as err:
+        print(err)
