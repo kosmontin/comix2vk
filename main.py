@@ -65,29 +65,14 @@ def get_uploadserver_url(api_key, group_id, api_ver):
     return answer['response']['upload_url']
 
 
-def get_posted_comics_nums():
-    if os.path.exists('posted_comics.txt'):
-        with open('posted_comics.txt', 'r') as file:
-            posted_comics = file.readlines()
-        return posted_comics
-
-
-def get_random_comic(comics_count):
-    posted_comics = get_posted_comics_nums()
-    for _ in range(1, comics_count+1):
-        comic_num = random.randint(1, comics_count)
-        if not posted_comics or comic_num not in posted_comics:
-            break
-    else:
-        raise ValueError('Все комиксы опубликованы. Пожалуйста, удалите файл "posted_comics.txt"')
+def get_comic(comic_num):
     url = f'https://xkcd.com/{comic_num}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     comic_content = response.json()
     return {
         'filename': download_comix_img(comic_content['img']),
-        'comment': comic_content['alt'],
-        'comic_num': comic_num
+        'comment': comic_content['alt']
     }
 
 
@@ -107,6 +92,19 @@ def get_comics_count():
     return response.json()['num']
 
 
+def get_unique_comics_num(comics_count):
+    posted_comics = None
+    if os.path.exists('posted_comics.txt'):
+        with open('posted_comics.txt', 'r') as file:
+            posted_comics = file.readlines()
+    for _ in range(1, comics_count+1):
+        comic_num = random.randint(1, comics_count)
+        if not posted_comics or comic_num not in posted_comics:
+            return comic_num
+    else:
+        raise ValueError('Все комиксы опубликованы. Пожалуйста, удалите файл "posted_comics.txt"')
+
+
 def write_posted_comic_num(comic_num):
     with open('posted_comics.txt', 'a') as posted_file:
         posted_file.write(f'{comic_num}\n')
@@ -122,16 +120,21 @@ def check_response(response):
         )
 
 
-def post_comic(api_key, group_id, api_ver):
-    comic = get_random_comic(get_comics_count())
+def post_random_comic(api_key, group_id, api_ver, post_only_unique):
+    comics_count = get_comics_count()
+    if post_only_unique:
+        comic_num = get_unique_comics_num(comics_count)
+    else:
+        comic_num = random.randint(1, comics_count)
+    comic = get_comic(comic_num)
     try:
         upload_url = get_uploadserver_url(api_key, group_id, api_ver)
         answer = upload_file_to_server(upload_url, comic['filename'])
         answer = save_file_to_server(api_key, group_id, api_ver, answer)
         post_to_wall(api_key, group_id, api_ver, answer, comic['comment'])
-        write_posted_comic_num(comic['comic_num'])
+        write_posted_comic_num(comic_num)
         print('Комикс опубликован')
-    except SystemError as err:
+    except (SystemError, ValueError) as err:
         print(err)
     finally:
         os.remove(comic['filename'])
@@ -139,7 +142,8 @@ def post_comic(api_key, group_id, api_ver):
 
 if __name__ == '__main__':
     load_dotenv()
-    api_key, group_id, api_ver = os.getenv('VK_ACCESS_TOKEN'), \
-                                 os.getenv('VK_GROUP_ID'), \
-                                 os.getenv('VK_API_VER')
-    post_comic(api_key, group_id, api_ver)
+    api_key, group_id, api_ver, only_unique = os.getenv('VK_ACCESS_TOKEN'), \
+                                              os.getenv('VK_GROUP_ID'), \
+                                              os.getenv('VK_API_VER'), \
+                                              os.getenv('POST_UNIQUE_COMIC', False).lower() in ('true', 'yes', '1')
+    post_random_comic(api_key, group_id, api_ver, only_unique)
