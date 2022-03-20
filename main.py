@@ -65,7 +65,7 @@ def get_uploadserver_url(api_key, group_id, api_ver):
     return answer['response']['upload_url']
 
 
-def get_posted_comics():
+def get_posted_comics_nums():
     if os.path.exists('posted_comics.txt'):
         with open('posted_comics.txt', 'r') as file:
             posted_comics = file.readlines()
@@ -73,8 +73,8 @@ def get_posted_comics():
     return None
 
 
-def get_comic(comics_count):
-    posted_comics = get_posted_comics()
+def get_random_comic(comics_count):
+    posted_comics = get_posted_comics_nums()
     for _ in range(1, comics_count+1):
         comic_num = random.randint(1, comics_count)
         if not posted_comics or comic_num not in posted_comics:
@@ -108,7 +108,7 @@ def get_comics_count():
     return response.json()['num']
 
 
-def write_posted_comic(comic_num):
+def write_posted_comic_num(comic_num):
     with open('posted_comics.txt', 'a') as posted_file:
         posted_file.write(f'{comic_num}\n')
 
@@ -124,13 +124,13 @@ def check_response(response):
 
 
 def post_comic(api_key, group_id, api_ver):
-    comic = get_comic(get_comics_count())
+    comic = get_random_comic(get_comics_count())
     try:
         upload_url = get_uploadserver_url(api_key, group_id, api_ver)
         answer = upload_file_to_server(upload_url, comic['filename'])
         answer = save_file_to_server(api_key, group_id, api_ver, answer)
         post_to_wall(api_key, group_id, api_ver, answer, comic['comment'])
-        write_posted_comic(comic['comic_num'])
+        write_posted_comic_num(comic['comic_num'])
         print('Комикс опубликован')
     except SystemError as err:
         print(err)
